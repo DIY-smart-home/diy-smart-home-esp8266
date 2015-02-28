@@ -153,26 +153,37 @@ uint8_t ICACHE_FLASH_ATTR ds_read() {
   return r;
 }
 
-void get_temp()
+int get_temp()
 {
   ds_reset();
   ds_write(0xcc,1);
   ds_write(0xbe,1);
 
-  g_temperature=(int)ds_read();
-  os_printf("ds_read: %d \r\n", g_temperature);
-  g_temperature=g_temperature+(int)ds_read()*256;
-  g_temperature/=16;
-  if (g_temperature>100) g_temperature-=4096;
+  int temperature=(int)ds_read();
+  temperature=temperature+(int)ds_read()*256;
+  temperature/=16;
+  if (temperature>100) {
+    temperature-=4096;
+  }
+  //g_temperature = temperature;
   ds_reset();
   ds_write(0xcc,1);
   ds_write(0x44,1);
-  os_printf("temperature: %d \r\n", g_temperature);
+  return temperature;
 }
 
 void some_timerfunc(void *arg)
 {
-  get_temp();
+  int currentTemperature = get_temp();
+  os_printf("temperature: %d \r\n", currentTemperature);
+
+  if (g_temperature == currentTemperature) {
+    //no need to change anything
+    return;
+  }
+
+  g_temperature = currentTemperature;
+
   if (g_temperature >= g_thresholdTemperature) {
     // Set GPIO4 as high-level output,GPIO5 as low-level output
     gpio_output_set(BIT4, BIT5, BIT4|BIT5, 0);
