@@ -7,6 +7,9 @@
 #define user_procTaskPrio        0
 #define user_procTaskQueueLen    1
 
+int g_temperature = 0;
+int g_thresholdTemperature = 30;
+
 os_event_t    user_procTaskQueue[user_procTaskQueueLen];
 static void user_procTask(os_event_t *events);
 
@@ -156,20 +159,33 @@ void get_temp()
   ds_write(0xcc,1);
   ds_write(0xbe,1);
 
-  int temperature=(int)ds_read();
-  os_printf("ds_read: %d \r\n", temperature);
-  temperature=temperature+(int)ds_read()*256;
-  temperature/=16;
-  if (temperature>100) temperature-=4096;
+  g_temperature=(int)ds_read();
+  os_printf("ds_read: %d \r\n", g_temperature);
+  g_temperature=g_temperature+(int)ds_read()*256;
+  g_temperature/=16;
+  if (g_temperature>100) g_temperature-=4096;
   ds_reset();
   ds_write(0xcc,1);
   ds_write(0x44,1);
-  os_printf("temperature: %d \r\n", temperature);
+  os_printf("temperature: %d \r\n", g_temperature);
 }
 
 void some_timerfunc(void *arg)
 {
   get_temp();
+  if (g_temperature >= g_thresholdTemperature) {
+    //Set GPIO5 to LOW
+    os_printf("Set GPIO5 to LOW", g_temperature);
+    gpio_output_set(0, BIT5, BIT5, 0);
+    // Set GPIO4 as high-level output,GPIO5 as low-level output,
+    gpio_output_set(BIT4, BIT5, BIT4|BIT5, 0);
+  }
+  else {
+    //Set GPIO5 to HIGH
+    os_printf("Set GPIO5 to HIGH", g_temperature);
+    // Set GPIO4 as high-level output,GPIO5 as low-level output,
+    gpio_output_set(BIT5, BIT4, BIT5|BIT4, 0);
+  }
 }
 
 //Do nothing function
@@ -195,14 +211,23 @@ user_init()
   //Disarm timer
   os_timer_disarm(&some_timer);
 
+  //Set GPIO5 to output mode
+  PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO5_U, FUNC_GPIO5);
+
+  //Set GPIO4 to output mode
+  PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO4_U, FUNC_GPIO4);
+
+  //Set GPIO4 and GPIO5 to LOW
+  //gpio_output_set(0, BIT5|BIT4, BIT5|BIT4, 0);
+
   //Setup timer
   os_timer_setfn(&some_timer, (os_timer_func_t *)some_timerfunc, NULL);
 
   //Arm the timer
   //&some_timer is the pointer
-  //3000 is the fire time in ms (aka 3 second)
+  //1000 is the fire time in ms (aka 1 second)
   //0 for once and 1 for repeating
-  os_timer_arm(&some_timer, 3000, 1);
+  os_timer_arm(&some_timer, 1000, 1);
 
   //Start os task
   system_os_task(user_procTask, user_procTaskPrio, user_procTaskQueue, user_procTaskQueueLen);
