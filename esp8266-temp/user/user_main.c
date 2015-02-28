@@ -174,16 +174,11 @@ void some_timerfunc(void *arg)
 {
   get_temp();
   if (g_temperature >= g_thresholdTemperature) {
-    //Set GPIO5 to LOW
-    os_printf("Set GPIO5 to LOW", g_temperature);
-    gpio_output_set(0, BIT5, BIT5, 0);
-    // Set GPIO4 as high-level output,GPIO5 as low-level output,
+    // Set GPIO4 as high-level output,GPIO5 as low-level output
     gpio_output_set(BIT4, BIT5, BIT4|BIT5, 0);
   }
   else {
-    //Set GPIO5 to HIGH
-    os_printf("Set GPIO5 to HIGH", g_temperature);
-    // Set GPIO4 as high-level output,GPIO5 as low-level output,
+    // Set GPIO4 as high-level output,GPIO5 as low-level output
     gpio_output_set(BIT5, BIT4, BIT5|BIT4, 0);
   }
 }
@@ -216,9 +211,6 @@ user_init()
 
   //Set GPIO4 to output mode
   PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO4_U, FUNC_GPIO4);
-
-  //Set GPIO4 and GPIO5 to LOW
-  //gpio_output_set(0, BIT5|BIT4, BIT5|BIT4, 0);
 
   //Setup timer
   os_timer_setfn(&some_timer, (os_timer_func_t *)some_timerfunc, NULL);
