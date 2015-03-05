@@ -46,6 +46,7 @@ MQTT_Client mqttClient;
 
 int g_temperature = 0;
 int g_thresholdTemperature = 30;
+bool g_settingsUpdated = false;
 
 os_event_t    user_procTaskQueue[user_procTaskQueueLen];
 static void user_procTask(os_event_t *events);
@@ -55,6 +56,7 @@ static volatile os_timer_t some_timer;
 static int gpioPin;
 
 char* itoa(int value, char* result, int base);
+int atoi(const char *s);
 
 void wifiConnectCb(uint8_t status)
 {
@@ -69,6 +71,10 @@ void mqttConnectedCb(uint32_t *args)
 {
 	MQTT_Client* client = (MQTT_Client*)args;
 	INFO("MQTT: Connected\r\n");
+	if (FALSE == MQTT_Subscribe(client, "/settings/temperature", 0))
+	{
+		INFO("MQTT: Unable to subscribe\r\n");
+	}
 }
 
 void mqttDisconnectedCb(uint32_t *args)
@@ -95,6 +101,14 @@ void mqttDataCb(uint32_t *args, const char* topic, uint32_t topic_len, const cha
 
 	os_memcpy(dataBuf, data, data_len);
 	dataBuf[data_len] = 0;
+
+	if (0 == strcmp(topicBuf, "/settings/temperature"))
+	{
+		INFO("Settings have been received\r\n");
+		g_thresholdTemperature = atoi(dataBuf);
+		g_settingsUpdated = true;
+		INFO("Threshold temperature: %d\r\n", g_thresholdTemperature);
+	}
 
 	INFO("Receive topic: %s, data: %s \r\n", topicBuf, dataBuf);
 	os_free(topicBuf);
@@ -263,11 +277,12 @@ void some_timerfunc(void *arg)
 	int currentTemperature = get_temp();
 	os_printf("temperature: %d \r\n", currentTemperature);
 
-	if (g_temperature == currentTemperature) {
+	if ( (false == g_settingsUpdated) && (g_temperature == currentTemperature) ) {
 		//no need to change anything
 		return;
 	}
 
+	g_settingsUpdated = false;
 	g_temperature = currentTemperature;
 
 	char *tempStr = "000.0";
@@ -281,6 +296,7 @@ void some_timerfunc(void *arg)
 	MQTT_Client* client = (MQTT_Client*)arg;
 	MQTT_Publish(client, "/home/bee1/temperature", str, strlen(str), 0, 1);
 
+	INFO("Temperature %d, Threshold temperature: %d\r\n", g_temperature, g_thresholdTemperature);
 	if (g_temperature >= g_thresholdTemperature) {
 		// Set GPIO4 as high-level output,GPIO5 as low-level output
 		gpio_output_set(BIT4, BIT5, BIT4|BIT5, 0);
@@ -320,6 +336,11 @@ char* itoa(int value, char* result, int base) {
 		*ptr1++ = tmp_char;
 	}
 	return result;
+}
+
+int atoi (const char *s)
+{
+	return (int) strtol (s, NULL, 10);
 }
 
 void user_init(void)
