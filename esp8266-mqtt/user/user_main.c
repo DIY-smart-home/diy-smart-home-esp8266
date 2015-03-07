@@ -42,6 +42,8 @@
 #define user_procTaskPrio        0
 #define user_procTaskQueueLen    1
 
+#define settings_name "green"
+
 MQTT_Client mqttClient;
 
 int g_temperature = 0;
@@ -289,12 +291,14 @@ void some_timerfunc(void *arg)
 	itoa(g_temperature, tempStr, 10);
 
 	char str[255];
-	strcpy (str,"{ \"temperature\": ");
-	strcat (str,tempStr);
+	strcpy (str,"{ \"name\": \"");
+	strcat (str, settings_name);
+	strcat (str,"\", \"temperature\": ");
+	strcat (str, tempStr);
 	strcat (str,"} ");
 
 	MQTT_Client* client = (MQTT_Client*)arg;
-	MQTT_Publish(client, "/home/bee1/temperature", str, strlen(str), 0, 1);
+	MQTT_Publish(client, "/sensors/temperature", str, strlen(str), 0, 1);
 
 	INFO("Temperature %d, Threshold temperature: %d\r\n", g_temperature, g_thresholdTemperature);
 	if (g_temperature >= g_thresholdTemperature) {
@@ -354,7 +358,7 @@ void user_init(void)
 	CFG_Load();
 
 	//MQTT_InitConnection(&mqttClient, sysCfg.mqtt_host, sysCfg.mqtt_port, sysCfg.security);
-	MQTT_InitConnection(&mqttClient, "192.168.4.101", 1883, 0);
+	MQTT_InitConnection(&mqttClient, "iot.anavi.org", 1883, 0);
 	INFO("\r\nInit ...\r\n");
 	//MQTT_InitConnection(&mqttClient, "192.168.11.122", 1880, 0);
 
