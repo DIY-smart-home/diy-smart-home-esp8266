@@ -38,11 +38,12 @@
 #include "user_interface.h"
 #include "mem.h"
 #include "os_type.h"
+#include "jsmn.h"
 
 #define user_procTaskPrio        0
 #define user_procTaskQueueLen    1
 
-#define settings_name "green"
+#define settings_name "red"
 
 MQTT_Client mqttClient;
 
@@ -59,6 +60,8 @@ static int gpioPin;
 
 char* itoa(int value, char* result, int base);
 int atoi(const char *s);
+
+bool parse(char *json);
 
 void wifiConnectCb(uint8_t status)
 {
@@ -104,12 +107,10 @@ void mqttDataCb(uint32_t *args, const char* topic, uint32_t topic_len, const cha
 	os_memcpy(dataBuf, data, data_len);
 	dataBuf[data_len] = 0;
 
-	if (0 == strcmp(topicBuf, "/settings/temperature"))
+	if ( (0 == strcmp(topicBuf, "/settings/temperature")) &&
+				(false == parse(dataBuf)) )
 	{
-		INFO("Settings have been received\r\n");
-		g_thresholdTemperature = atoi(dataBuf);
-		g_settingsUpdated = true;
-		INFO("Threshold temperature: %d\r\n", g_thresholdTemperature);
+		INFO("\r\nUnable to parse JSON.\r\n");
 	}
 
 	INFO("Receive topic: %s, data: %s \r\n", topicBuf, dataBuf);
@@ -345,6 +346,56 @@ char* itoa(int value, char* result, int base) {
 int atoi (const char *s)
 {
 	return (int) strtol (s, NULL, 10);
+}
+
+static int jsoneq(const char *json, jsmntok_t *tok, const char *s) {
+	if (tok->type == JSMN_STRING && (int) strlen(s) == tok->end - tok->start &&
+		strncmp(json + tok->start, s, tok->end - tok->start) == 0) {
+		return 0;
+	}
+	return -1;
+}
+
+bool parse(char *json) {
+
+	jsmn_parser parser;
+	// Max number of tokens: 32
+	jsmntok_t tokens[32];
+
+	jsmn_init(&parser);
+	// All tokens retrieved from the JSON
+	int tokensCount = jsmn_parse(&parser, json, strlen(json), tokens,
+													sizeof(tokens)/sizeof(tokens[0]));
+	if (tokensCount < 0) {
+		return false;
+	}
+
+	// Assume the top-level element is an object
+	if ( (tokensCount < 1) || (tokens[0].type != JSMN_OBJECT) ) {
+		return false;
+	}
+
+	// Loop over all keys of the root object
+	int index = 1;
+	for (index; index < tokensCount; index++) {
+		if (jsoneq(json, &tokens[index], "temperature") == 0) {
+
+			unsigned int length = tokens[index+1].end - tokens[index+1].start;
+			char keyString[length + 1];
+			memcpy(keyString, &json[tokens[index+1].start], length);
+			keyString[length] = '\0';
+
+			INFO("Temperature settings detected %s\n", keyString);
+
+			int settingsTemperature = atoi(keyString);
+			g_thresholdTemperature = settingsTemperature;
+			g_settingsUpdated = true;
+
+			INFO("Threshold Temperature %d\n", g_thresholdTemperature);
+
+			index++;
+		}
+	}
 }
 
 void user_init(void)

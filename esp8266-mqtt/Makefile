@@ -98,7 +98,7 @@ endif
 
 
 # which modules (subdirectories) of the project to include in compiling
-MODULES		= driver mqtt user modules
+MODULES		= driver mqtt user modules jsmn
 EXTRA_INCDIR    = include /opt/Espressif/include /opt/Espressif/ESP8266_SDK/include
 
 # libraries used in this project, mainly provided by the SDK
