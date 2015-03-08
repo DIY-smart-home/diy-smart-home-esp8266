@@ -1,8 +1,34 @@
 var http = require("http");
 var url = require("url");
+var mqtt = require('mqtt');
 var splitter = require('./splitter.js');
 
+var sensors = {};
+
 function start() {
+
+  var client  = mqtt.connect('mqtt://iot.anavi.org');
+
+  client.subscribe('/sensors/temperature');
+
+  client.on('connect', function() { // When connected
+
+    // subscribe to a topic
+    client.subscribe('/sensors/temperature', function() {
+      // when a message arrives, do something with it
+      client.on('message', function(topic, message, packet) {
+        console.log("Received '" + message + "' on '" + topic + "'");
+        try {
+          var receivedObj = JSON.parse(message);
+          sensors[receivedObj.name] = receivedObj.temperature;
+        }
+        catch(error) {
+            console.log('JSON error: '+error.message+' topic: '+topic);
+        }
+      });
+    });
+  });
+
   function onRequest(request, response) {
     var pageFound = false;
     var urlInfo = url.parse(request.url);
@@ -21,6 +47,10 @@ function start() {
         result.errorMessage = 'Invalid settings';
       }
       else {
+        var setSettings = { temperature: thresholdTemperature };
+        var options = { qos: 1, retain: true };
+        client.publish('/settings/temperature', JSON.stringify(setSettings), options);
+
         result.error = 'false';
         result.errorCode = '0';
         result.errorMessage = '';
@@ -29,7 +59,10 @@ function start() {
     else if ('/sensors/temperature' === pathname) {
       // Handle '/sensors/temperature'
       pageFound = true;
-      result.temperature = 20;
+      //result.temperature = 20;
+
+      result.data = sensors;
+
       result.error = 'false';
       result.errorCode = '0';
       result.errorMessage = '';
