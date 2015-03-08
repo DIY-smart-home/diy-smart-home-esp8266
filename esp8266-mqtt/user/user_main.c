@@ -388,8 +388,10 @@ bool parse(char *json) {
 			INFO("Temperature settings detected %s\n", keyString);
 
 			int settingsTemperature = atoi(keyString);
-			g_thresholdTemperature = settingsTemperature;
-			g_settingsUpdated = true;
+			if (g_thresholdTemperature != settingsTemperature) {
+				g_thresholdTemperature = settingsTemperature;
+				g_settingsUpdated = true;
+			}
 
 			INFO("Threshold Temperature %d\n", g_thresholdTemperature);
 
