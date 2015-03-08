@@ -288,15 +288,15 @@ void some_timerfunc(void *arg)
 	g_settingsUpdated = false;
 	g_temperature = currentTemperature;
 
-	char *tempStr = "000.0";
+	char *tempStr = "00";
 	itoa(g_temperature, tempStr, 10);
 
 	char str[255];
 	strcpy (str,"{ \"name\": \"");
 	strcat (str, settings_name);
-	strcat (str,"\", \"temperature\": ");
+	strcat (str,"\", \"temperature\": \"");
 	strcat (str, tempStr);
-	strcat (str,"} ");
+	strcat (str,"\" }");
 
 	MQTT_Client* client = (MQTT_Client*)arg;
 	MQTT_Publish(client, "/sensors/temperature", str, strlen(str), 0, 1);

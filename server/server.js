@@ -17,9 +17,11 @@ function start() {
     client.subscribe('/sensors/temperature', function() {
       // when a message arrives, do something with it
       client.on('message', function(topic, message, packet) {
-        console.log("Received '" + message + "' on '" + topic + "'");
+
+        var receivedText = message.toString();
+        console.log("Received '" + receivedText + "' on '" + topic + "'");
         try {
-          var receivedObj = JSON.parse(message);
+          var receivedObj = JSON.parse(receivedText);
           sensors[receivedObj.name] = receivedObj.temperature;
         }
         catch(error) {
