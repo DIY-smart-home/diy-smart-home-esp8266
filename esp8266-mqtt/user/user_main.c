@@ -63,6 +63,8 @@ int atoi(const char *s);
 
 bool parse(char *json);
 
+void publishData(MQTT_Client* client);
+
 void wifiConnectCb(uint8_t status)
 {
 	if(status == STATION_GOT_IP){
@@ -78,7 +80,11 @@ void mqttConnectedCb(uint32_t *args)
 	INFO("MQTT: Connected\r\n");
 	if (FALSE == MQTT_Subscribe(client, "/settings/temperature", 0))
 	{
-		INFO("MQTT: Unable to subscribe\r\n");
+		INFO("MQTT: Unable to subscribe to /settings/temperature\r\n");
+	}
+	if (FALSE == MQTT_Subscribe(client, "/ping", 0))
+	{
+		INFO("MQTT: Unable to subscribe to /ping\r\n");
 	}
 }
 
@@ -107,10 +113,16 @@ void mqttDataCb(uint32_t *args, const char* topic, uint32_t topic_len, const cha
 	os_memcpy(dataBuf, data, data_len);
 	dataBuf[data_len] = 0;
 
-	if ( (0 == strcmp(topicBuf, "/settings/temperature")) &&
-				(false == parse(dataBuf)) )
+	if (0 == strcmp(topicBuf, "/settings/temperature"))
 	{
-		INFO("\r\nUnable to parse JSON.\r\n");
+		if (false == parse(dataBuf))
+		{
+			INFO("\r\nUnable to parse JSON.\r\n");
+		}
+	}
+	else if (0 == strcmp(topicBuf, "/ping"))
+	{
+		publishData(client);
 	}
 
 	INFO("Receive topic: %s, data: %s \r\n", topicBuf, dataBuf);
@@ -275,6 +287,20 @@ int get_temp()
 }
 ////////////////////////////////////////////////////////////////////////////////
 
+void publishData(MQTT_Client* client)
+{
+	char *tempStr = "00";
+	itoa(g_temperature, tempStr, 10);
+	char str[255];
+	strcpy (str,"{ \"name\": \"");
+	strcat (str, settings_name);
+	strcat (str,"\", \"temperature\": \"");
+	strcat (str, tempStr);
+	strcat (str,"\" }");
+
+	MQTT_Publish(client, "/sensors/temperature", str, strlen(str), 0, 1);
+}
+
 void some_timerfunc(void *arg)
 {
 	int currentTemperature = get_temp();
@@ -288,18 +314,8 @@ void some_timerfunc(void *arg)
 	g_settingsUpdated = false;
 	g_temperature = currentTemperature;
 
-	char *tempStr = "00";
-	itoa(g_temperature, tempStr, 10);
-
-	char str[255];
-	strcpy (str,"{ \"name\": \"");
-	strcat (str, settings_name);
-	strcat (str,"\", \"temperature\": \"");
-	strcat (str, tempStr);
-	strcat (str,"\" }");
-
 	MQTT_Client* client = (MQTT_Client*)arg;
-	MQTT_Publish(client, "/sensors/temperature", str, strlen(str), 0, 1);
+	publishData(client);
 
 	INFO("Temperature %d, Threshold temperature: %d\r\n", g_temperature, g_thresholdTemperature);
 	if (g_temperature >= g_thresholdTemperature) {
