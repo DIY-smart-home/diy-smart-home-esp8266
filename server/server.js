@@ -3,13 +3,25 @@ var url = require("url");
 var mqtt = require('mqtt');
 var splitter = require('./splitter.js');
 
+//MQTT client
+var client = null;
+
 var sensors = {};
+
+function ping() {
+  var options = { qos: 1, retain: true };
+  client.publish('/ping', '', options);
+}
 
 function start() {
 
-  var client  = mqtt.connect('mqtt://iot.anavi.org');
+  client  = mqtt.connect('mqtt://iot.anavi.org');
 
   client.subscribe('/sensors/temperature');
+
+  //Sent ping signal every 15 minutes
+  var timeout = 15 * 60 * 1000;
+  setInterval( ping, timeout);
 
   client.on('connect', function() { // When connected
 
@@ -64,6 +76,16 @@ function start() {
       //result.temperature = 20;
 
       result.data = sensors;
+
+      result.error = 'false';
+      result.errorCode = '0';
+      result.errorMessage = '';
+    }
+    else if ('/ping' === pathname) {
+      // Send message on MQTT topic '/ping'
+      pageFound = true;
+
+      ping();
 
       result.error = 'false';
       result.errorCode = '0';
