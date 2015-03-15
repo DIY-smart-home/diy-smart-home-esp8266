@@ -1,0 +1,12 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="iot.anavi.smart" version="0.0.1" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <name>Sensors</name>
+    <description>
+        IoT demo: check temperature sensors data from ESP8266 through MQTT and HTTP API.
+    </description>
+    <author email="leon@anavi.org" href="http://anavi.org">
+        Leon Anavi
+    </author>
+    <content src="index.html" />
+    <access origin="*" />
+</widget>
