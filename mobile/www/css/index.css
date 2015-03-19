@@ -39,6 +39,10 @@ body {
   font-weight:normal;
 }
 
+.information {
+  margin: 0 5%;
+}
+
 #info {
   display:none;
 }
@@ -48,6 +52,14 @@ body {
   margin: 0 5%;
   font-size:24px;
   font-weight:normal;
+}
+
+#threshold {
+  width:90%;
+  margin: 0 5%;
+  font-size:24px;
+  font-weight:normal;
+  border: 1px solid #000000;
 }
 
 h1 {

@@ -1,4 +1,7 @@
 var app = {
+
+    sensorsData : null,
+
     // Application Constructor
     initialize: function() {
         this.bindEvents();
@@ -24,6 +27,9 @@ var app = {
         success: app.handlePingResponse,
         error: app.requestError
       });
+
+      //retrieve data from the sensors each 10 seconds
+      setInterval( app.loadSensorsData, 10000);
 
       app.receivedEvent('deviceready');
     },
@@ -51,6 +57,11 @@ var app = {
 
     loadSensorsTemperature : function(data) {
         var result = JSON.parse(data);
+        if (result === app.sensorsData) {
+          return;
+        }
+        app.sensorsData = result;
+        //Update text
         var info = "";
         for (var property in result.data) {
           info += property + ": " + result.data[property] + "C <br />\n";
@@ -68,6 +79,29 @@ var app = {
     // Handle button click
     handleButton : function() {
       console.log('clicked :)');
+
+      var thresholdTemperature = parseInt($('#threshold').val(), 10);
+      if (isNaN(thresholdTemperature)) {
+        thresholdTemperature = 0;
+      }
+
+      $.ajax({ url: "http://iot.anavi.org/settings/temperature",
+        type: "GET",
+
+        data: { temperature: thresholdTemperature },
+
+        success: function(data) {
+          var result = JSON.parse(data);
+          if (result.hasOwnProperty('errorCode') && (0 == result.errorCode) ) {
+            alert('Threshold temperature saved.');
+          }
+          else {
+            alert('Unable to save threshold temperature. Please try again later.');
+          }
+        },
+        error: app.requestError
+      });
+
     }
 };
 
