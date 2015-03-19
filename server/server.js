@@ -9,6 +9,9 @@ var client = null;
 var sensors = {};
 
 function ping() {
+  //reset data 
+  sensors = {};
+  //request information from all sensors
   var options = { qos: 1, retain: true };
   client.publish('/ping', '', options);
 }
