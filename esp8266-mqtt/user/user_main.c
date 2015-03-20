@@ -43,7 +43,7 @@
 #define user_procTaskPrio        0
 #define user_procTaskQueueLen    1
 
-#define settings_name "red"
+#define settings_name "orange"
 
 MQTT_Client mqttClient;
 
@@ -292,11 +292,8 @@ void publishData(MQTT_Client* client)
 	char *tempStr = "00";
 	itoa(g_temperature, tempStr, 10);
 	char str[255];
-	strcpy (str,"{ \"name\": \"");
-	strcat (str, settings_name);
-	strcat (str,"\", \"temperature\": \"");
-	strcat (str, tempStr);
-	strcat (str,"\" }");
+	ets_sprintf(str, "{ \"name\": \"%s\", \"temperature\": \"%s\" }",
+							settings_name, tempStr);
 
 	MQTT_Publish(client, "/sensors/temperature", str, strlen(str), 0, 1);
 }
