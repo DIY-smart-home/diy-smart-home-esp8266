@@ -13,7 +13,6 @@ var app = {
     // 'load', 'deviceready', 'offline', and 'online'.
     bindEvents: function() {
         document.addEventListener('deviceready', this.onDeviceReady, false);
-        document.getElementById('button').onclick = this.handleButton;
     },
 
     // deviceready Event Handler
@@ -30,6 +29,8 @@ var app = {
 
       //retrieve data from the sensors each 10 seconds
       setInterval( app.loadSensorsData, 10000);
+
+      $( "#buttonSaveThreshold" ).bind( "click", app.handleButton);
 
       app.receivedEvent('deviceready');
     },
@@ -71,15 +72,13 @@ var app = {
 
     // Update DOM on a Received Event
     receivedEvent: function(id) {
-      document.getElementById('loading').setAttribute('style', 'display:none;');
-      document.getElementById('info').setAttribute('style', 'display:block;');
+      //document.getElementById('loading').setAttribute('style', 'display:none;');
+      //document.getElementById('info').setAttribute('style', 'display:block;');
       console.log('Received Event: ' + id);
     },
 
     // Handle button click
     handleButton : function() {
-      console.log('clicked :)');
-
       var thresholdTemperature = parseInt($('#threshold').val(), 10);
       if (isNaN(thresholdTemperature)) {
         thresholdTemperature = 0;

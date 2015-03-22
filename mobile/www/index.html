@@ -6,24 +6,55 @@
         <meta name="msapplication-tap-highlight" content="no" />
         <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
         <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+        <link rel="stylesheet" href="include/jquery.mobile-1.4.5.min.css" />
         <link rel="stylesheet" type="text/css" href="css/index.css" />
-        <script type="text/javascript" src="js/jquery-1.11.2.min.js"></script>
-        <title>Temperature</title>
+        <script type="text/javascript" src="include/jquery-1.10.2.min.js"></script>
+        <script type="text/javascript" src="include/jquery.mobile-1.4.5.min.js"></script>
+        <script type="text/javascript" src="cordova.js"></script>
+        <script type="text/javascript" src="js/index.js"></script>
+        <title>Internet of Things</title>
     </head>
     <body>
-      <div id="loading" class="app">
-        <h1>Loading</h1>
+
+      <div data-role="page" id="page-login" data-url="page-login">
+        <div data-role="header" data-theme="b" class="page-header">
+          <h1>Internet of Things</h1>
+        </div>
+
+        <div role="main" class="ui-content">
+          <label for="basic">Username:</label>
+          <input type="text" name="username" id="basic" value="demo">
+          <label for="basic">Password:</label>
+          <input type="password" name="password" id="basic" value="demo">
+          <a href="#page-temperature" data-role="button" data-icon="carat-r" data-iconpos="right">Login</a>
+        </div><!-- /content -->
+
       </div>
-      <div id="info" class="app">
-        <h1>Temperature</h1>
-        <p id="text" class="information"></p>
-        <p class="information">Threshold temperature:</p>
-        <p><input type="number" id="threshold" name="threshold" min="-55" max="125" value="0"></p>
-        <p>
-          <button id="button">Save</button>
-        </p>
+
+      <div data-role="page" id="page-temperature" data-url="page-temperature">
+        <div data-role="header" data-theme="b" class="page-header">
+          <h1>Internet of Things</h1>
+          <a href="#options" data-icon="bars" data-iconpos="notext" data-shadow="false" data-iconshadow="false" class="ui-nodisc-icon">Open left panel</a>
+
+        </div><!-- /header -->
+
+        <div role="main" class="ui-content">
+          <p id="text" class="information"></p>
+          <label for="threshold">Threshold temperature:</label>
+          <input type="number" name="threshold" id="threshold" min="-55" max="125" value="0"  />
+          <button id="buttonSaveThreshold" data-icon="check">Save</button>
+        </div><!-- /content -->
+
+        <div data-role="panel" id="options" data-theme="b">
+          <ul data-role="listview">
+            <li data-icon="home"><a href="#page-temperature">Home</a></li>
+            <li data-icon="gear"><a href="#">Settings</a></li>
+            <li data-icon="info"><a href="#">About</a></li>
+            <li data-icon="delete"><a href="#page-login">Logout</a></li>
+          </ul>
+        </div><!-- /panel -->
+
       </div>
-      <script type="text/javascript" src="cordova.js"></script>
-      <script type="text/javascript" src="js/index.js"></script>
+
     </body>
 </html>
