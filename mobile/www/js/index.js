@@ -13,6 +13,7 @@ var app = {
     // 'load', 'deviceready', 'offline', and 'online'.
     bindEvents: function() {
         document.addEventListener('deviceready', this.onDeviceReady, false);
+        document.addEventListener("resume", this.ping, false);
     },
 
     // deviceready Event Handler
@@ -21,11 +22,7 @@ var app = {
     // function, we must explicitly call 'app.receivedEvent(...);'
     onDeviceReady: function() {
 
-      $.ajax({ url: "http://iot.anavi.org/ping",
-        //Success callback
-        success: app.handlePingResponse,
-        error: app.requestError
-      });
+      app.ping();
 
       //retrieve data from the sensors each 10 seconds
       setInterval( app.loadSensorsData, 10000);
@@ -33,6 +30,14 @@ var app = {
       $( "#buttonSaveThreshold" ).bind( "click", app.handleButton);
 
       app.receivedEvent('deviceready');
+    },
+
+    ping: function() {
+      $.ajax({ url: "http://iot.anavi.org/ping",
+        //Success callback
+        success: app.handlePingResponse,
+        error: app.requestError
+      });
     },
 
     handlePingResponse : function(data) {
