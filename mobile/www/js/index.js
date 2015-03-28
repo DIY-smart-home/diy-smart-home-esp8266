@@ -28,8 +28,12 @@ var app = {
       setInterval( app.loadSensorsData, 10000);
 
       $( "#buttonSaveThreshold" ).bind( "click", app.handleButton);
-
+      $( "#buttonLogin" ).bind( "click", app.login);
       app.receivedEvent('deviceready');
+    },
+
+    login: function() {
+      $.mobile.pageContainer.pagecontainer("change", "#page-temperature");
     },
 
     ping: function() {
